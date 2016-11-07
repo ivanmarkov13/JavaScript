@@ -1,0 +1,395 @@
+﻿<!--
+	Това е макет на първото домашно задание по ОКГ.	Задачата
+	е да направите вашия йероглиф само чрез използваните до
+	момента в упражненията неща.
+
+	Йероглифът трябва да е с размери 20х20 и дебелина 10.
+	Най-горе на страницата трябва да сложите име, фамилия,
+	група и факултетен номер.
+
+	Макетът създава и движи сцената, земята и светлините
+	чрез функцията createScene(). Ако ѝ се подаде true,
+	то се рисува прозрачна кутия с малко по-големи размери,
+	в която да се постави йероглифа.
+
+	За да не е празен макетът, има код за създаванена седем
+	наклонени плоскости. Махнете този код и сложете своя
+	код за йероглифа.
+-->
+
+<html>
+<head>
+    <script src="three.min.js"></script>
+
+    <script>
+        // функция за създаване на сцената
+        function createScene(addFrame)
+        {
+            // нагласяване на цвета и центрирането на текста с имената ви
+            document.getElementsByTagName('h1')[0].style = 'color:white; text-align:center;';
+
+            // създаване на рисувателното поле на цял екран
+            renderer = new THREE.WebGLRenderer({antialias:true});
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+            renderer.domElement.style = 'width:100%; height:100%; position:fixed; top:0; left:0; z-index:-1;';
+
+            // създаване на сцена и камера
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera( 30, window.innerWidth/window.innerHeight, 0.1, 1000 );
+
+            // създаване на земята като плоска равнина
+            var ground = new THREE.Mesh(
+                    new THREE.PlaneGeometry(13000,13000),
+                    new THREE.MeshPhongMaterial({color:'goldenrod'})
+            );
+            ground.position.set(0,-11,0);
+            ground.rotation.set(-Math.PI/2,0,0);
+            scene.add( ground );
+
+            // ако сме поискали (чрез параметър true),
+            // създаваме полупрозрачна рамка около зоната,
+            //в която трябва да е поместен йероглифа
+            if (addFrame)
+            {
+                // прозрачи стени
+                var walls = new THREE.Mesh(
+                        new THREE.BoxGeometry(21,21,11),
+                        new THREE.MeshPhongMaterial({color:'white',shininess:220,opacity:0.6,transparent:true,side:THREE.DoubleSide})
+                );
+                scene.add(walls);
+
+                // тънък бял кант
+                var frame = new THREE.BoxHelper(walls);
+                frame.material.color.set('white');
+                scene.add( frame );
+            }
+
+            // създаване на четири светлини с различни цветове
+            lights=[];
+            var colors=['dodgerblue','hotpink','cyan','fuchsia'];
+            for (var i=0; i<4; i++)
+            {
+                lights[i] = new THREE.PointLight(colors[i],1);
+                scene.add(lights[i]);
+            }
+
+            // активиране на анимацията
+            drawFrame();
+        }
+
+        // функция за анимиране на сцената
+        var t = 0; // време
+        function drawFrame()
+        {
+            requestAnimationFrame( drawFrame );
+
+            t++;
+
+            // леко въртене на сцената
+            scene.rotation.x = Math.sin(t/135)/10;
+            scene.rotation.y = Math.sin(t/200)/2;
+            scene.rotation.z = Math.cos(t/111)/10;
+            // приближаване и отдалечаване на камерата
+            camera.position.set(0,0,50);
+            camera.lookAt(new THREE.Vector3(0,0,0));
+
+            // движение на светлините
+            for (var i=0; i<4; i++)
+            {
+                var angle = t/100+Math.PI/2*i;
+                lights[i].position.set(
+                        15*Math.cos(angle),
+                        10*Math.sin(1.5*angle)+5,
+                        10);
+            }
+
+            //рисуване на сцената
+            renderer.render( scene, camera );
+        }
+    </script>
+</head>
+
+<body>
+<!-- тук сложете вашите данни -->
+<h1>ф.н. 81279 &ndash; група 8 &ndash; Здравко Петров</h1>
+
+<script>
+createScene(true);
+
+var letter = new THREE.Object3D();
+var extrudeSettings = {amount : 10, bevelEnabled : false, steps: 2, bevelSize: 0.1, bevelThickness: 0.1}
+var material = new THREE.MeshPhongMaterial();
+var all_mesh_objects = [];
+var count = 0;
+function create_object(sub_curve_arr, all_mesh_objects, name = "not curve for sure")
+{
+    var vector3D = [];
+    for(var i = 0;i<sub_curve_arr.length;i++){
+        vector3D[i] = new THREE.Vector3(sub_curve_arr[i][0],sub_curve_arr[i][1]);
+    }
+    var points = vector3D;
+    // проверка за това дали подаденият масив съдържа точки от крива или точки от права
+    if(name == "curve")
+    {
+        // На упражненията правихме подобно с QuadraticBezierCurve. Аз реших да се поразровя малко в документацията
+        var curve3D = new THREE.CatmullRomCurve3(vector3D); // Създаване на гладкна крива от поредица подадени точки(3Д вектори)
+        // Функцията създава гладка крива около подадените точки като създава N на броя други точки по самата крива(по този начин тя става гладка)
+        var points = curve3D.getPoints(1000); //В случаят подаваме 1000 точки
+    }
+
+    // Създаваме Фигура която описва пътя на точките ползвайки функциите moveTo и lineTo от упражнение S06
+    var shape = new THREE.Shape();
+    for(var i = 0;i<points.length;i++){
+        shape.moveTo(points[i].x,points[i].y);
+    }
+    var extrudeGeometry = new THREE.ExtrudeGeometry(shape,extrudeSettings);
+    var meshed_object = new THREE.Mesh(extrudeGeometry, material);
+
+    while(all_mesh_objects[count] != null){
+        count++;
+    }
+    all_mesh_objects[count] =  meshed_object;
+
+    for(var i = 0;i<all_mesh_objects.length;i++){
+        all_mesh_objects[i].position.z = -5.5;
+        letter.add(all_mesh_objects[i]);
+    }
+}
+
+// Координатите на кривите са взети с програмата GeoGebra
+var curvesCoordinates = {
+            name: "curve",
+            obj:
+                [
+                     [
+                        [2.95,8.15],
+                        [2.8,7.47],
+                        [2.67, 7.03],
+                        [2.48, 6.48],
+                        [2.23, 5.88],
+                        [1.72, 5.06],
+                        [1.29,4.52],
+                        [1.17,4.39],
+                        [1.04, 4.24],
+                        [1.22,4.08],
+                        [1.46,3.86],
+                        [1.56,3.78],
+                        [1.67,3.69],
+                        [1.77,3.79],
+                        [2.26, 4.36],
+                        [2.7, 4.97],
+                        [2.9, 5.31],
+                        [2.96,5.39]
+                    ],
+                    [
+                        [6.32,7.07],
+                        [6.47,7.12],
+                        [6.93,7.32],
+                        [6.99,7.35],
+                        [7.03,7.38],
+                        [7.08,7.34],
+                        [7.12,7.3],
+                        [7.21,7.22],
+                        [7.33,7.09],
+                        [7.47,6.93],
+                        [7.64,6.67],
+                        [7.78,6.4],
+                        [7.91,6.08],
+                        [7.94,6.01],
+                        [7.97,5.94],
+                        [7.84,5.89],
+                        [7.63,5.81],
+                        [7.4,5.73],
+                        [7.33,5.7],
+                        [7.24,5.66],
+                        [7.23,5.72],
+                        [7.22,5.75],
+                        [7.18,5.84],
+                        [7.07,6.12],
+                        [6.81,6.55],
+                        [6.6,6.8]
+                    ],
+                    [
+                        [8.75,7.4],
+                        [8.89,7.32],
+                        [8.97,7.29],
+                        [9.13,7.23],
+                        [9.39,7.14],
+                        [9.45,7.11],
+                        [9.53,7.08],
+                        [9.51,7],
+                        [9.48,6.92],
+                        [9.37,6.62],
+                        [9.15,6.15],
+                        [8.95,5.84],
+                        [8.89,5.75],
+                        [8.84,5.65],
+                        [8.65,5.66],
+                        [8.4,5.66],
+                        [8.15,5.66],
+                        [7.93,5.66],
+                        [8.11,5.88],
+                        [8.21,6.02],
+                        [8.57,6.77],
+                        [8.6,6.87],
+                        [8.66,7.06],
+                        [8.7,7.18]
+                    ],
+                    [
+                        [3.7,6.99],
+                        [3.81,7.06],
+                        [3.9,7.1],
+                        [3.99,7.15],
+                        [4.03,7.08],
+                        [4.1,7],
+                        [4.17,6.9],
+                        [4.3,6.74],
+                        [4.64,6.27],
+                        [4.92,5.73],
+                        [5,5.54],
+                        [5.06,5.42],
+                        [5.12,5.29],
+                        [5.14,5.14],
+                        [4.8,5],
+                        [4.57,4.9],
+                        [4.49,4.85],
+                        [4.42,4.82],
+                        [4.4,4.9],
+                        [4.38,4.98],
+                        [4.34,5.1],
+                        [4.25,5.38],
+                        [4,5.92],
+                        [3.67,6.34]
+                    ],
+                    [
+                        [10.09,2.14],
+                        [10.04,2.04],
+                        [9.92,1.98],
+                        [9.77,1.94],
+                        [9.6,1.94],
+                        [9.37,1.95],
+                        [9.13,1.97],
+                        [9.02,1.98],
+                        [8.88,2],
+                        [8.91,1.91],
+                        [8.99,1.7],
+                        [9.07,1.46],
+                        [9.1,1.36],
+                        [9.13,1.27],
+                        [9.15,1.2],
+                        [9.22,1.19],
+                        [9.28,1.19],
+                        [9.49,1.19],
+                        [9.8,1.2],
+                        [10.07,1.21],
+                        [10.24,1.23],
+                        [10.38,1.27],
+                        [10.49,1.32],
+                        [10.6,1.4],
+                        [10.71,1.5],
+                        [10.8,1.63],
+                        [10.90,1.98],
+                        [10.91,2.1],
+                        [10.91,2.14]
+                    ]
+                ]
+        };
+
+// Координатите на хоризонталните и вертикални обекти съм ги мерил с линиика от принтиран лист.
+var horizontalLines =
+                [
+                    [
+                        [1.37, 8.65],
+                        [1.37, 7.89],
+                        [5.03, 7.89],
+                        [5.03, 8.65]
+                    ],
+
+                    [
+                        [4.54, 9.71],
+                        [4.54, 8.96],
+                        [11.51, 8.96],
+                        [11.51, 9.71]
+
+                    ],
+                    [
+                        [5.1, 8.15],
+                        [10.91, 8.15],
+                        [10.91, 7.4],
+                        [5.1, 7.4]
+                    ],
+                    [
+                        [6.31,5.69],
+                        [9.7,5.69],
+                        [9.7,4.99],
+                        [6.31,4.99]
+                    ],
+                    [
+                        [6.08,4.13],
+                        [9.93,4.13],
+                        [9.93,3.42],
+                        [6.08,3.42]
+                    ]
+                ];
+
+var verticalLines =
+                [
+                    [
+                        [7.55,4.99],
+                        [8.38,4.99],
+                        [8.38,1.77],
+                        [7.55,1.77]
+                    ],
+                    [
+                        [5.1,7.4],
+                        [5.92, 7.4],
+                        [5.92, 1.02],
+                        [5.1, 1.02]
+                    ],
+                    [
+                        [7.54, 8.15],
+                        [8.4, 8.15],
+                        [8.4, 10.75],
+                        [7.54,10.75]
+                    ],
+                    [
+                        [2.9, 10.75],
+                        [2.9, 1.02],
+                        [3.71, 1.02],
+                        [3.71, 10.75]
+                    ],
+                    [
+                        [10.09, 7.4],
+                        [10.91, 7.4],
+                        [10.91, 2.14],
+                        [10.09, 2.14]
+                    ]
+                ];
+
+for(var i = 0;i<curvesCoordinates.obj.length;i++){
+    create_object(curvesCoordinates.obj[i], all_mesh_objects, verticalLines.name);
+}
+for(var i = 0;i<verticalLines.length;i++){
+    create_object(verticalLines[i], all_mesh_objects);
+}
+for(var i = 0;i<horizontalLines.length;i++){
+    create_object(horizontalLines[i], all_mesh_objects);
+}
+
+// мащабиране на буквата
+letter.scale.x = 2;
+letter.scale.y = 2;
+
+// центърът на буквата съм взел от GeoGebra
+// цетриране на обекта
+letter.translateX(-6.27*2);
+letter.translateY(-5.87*2);
+
+// Дабавяме обекта към сцената
+scene.add(letter);
+
+
+</script>
+</body>
+</html>
