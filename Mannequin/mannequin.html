@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html>
+
+<html>
+	<head>
+		<script src="three.min.js"></script>
+		<script src="human.js"></script>
+	</head>
+
+	<body>
+		<h1>"Сбогуване"<br><small>ф.н. 81279 &ndash; група 8 &ndash; Здравко Петров</small></h1>
+
+		<script>
+			// нагласяване на цвета и центрирането на текста с имената ви
+			document.getElementsByTagName('h1')[0].style = 'color:white; text-align:center; font-size:1.75em';
+
+			// рисувателно поле на цял екран
+			renderer = new THREE.WebGLRenderer({antialias:true});
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+			renderer.domElement.style = 'width:100%; height:100%; position:fixed; top:0; left:0; z-index:-1;';
+
+			// сцена и камера
+			scene = new THREE.Scene();
+			camera = new THREE.PerspectiveCamera( 30, window.innerWidth/window.innerHeight, 0.1, 2000 );
+			camera.position.set(0,3,300);
+
+			// светлини
+			var light = new THREE.DirectionalLight('lightblue',0.8);
+			light.position.set(0,1,4);
+			scene.add(light);
+			scene.add( new THREE.AmbientLight('white',0.4) );
+
+			// функция за анимиране на сцената
+			var t = 0; // време
+			function drawFrame()
+			{
+				requestAnimationFrame( drawFrame );
+				if (animate) animate(t++);
+				renderer.render( scene, camera );
+			}
+
+			// човече
+            манекен = женствен();
+            манекен1 = мъжествен();
+
+            манекен.rotation.y = 3*Math.PI/4;
+            манекен.position.x += 40;
+
+            манекен1.rotation.y = 3*Math.PI/4;
+
+            // тук се описват статичните елементи на позата
+            var clock = new THREE.Clock();
+			// анимация на човечето
+            var n = 0;
+            манекен.л_ръка.rotation.x = -Math.PI/2 + 0.7;
+
+            манекен1.л_лакът.rotation.z = -Math.PI/4;
+            манекен1.д_лакът.rotation.z = -Math.PI/4;
+            манекен1.д_ръка.rotation.z= Math.PI/8;
+            манекен1.л_ръка.rotation.z= -Math.PI/8;
+
+            манекен1.л_китка.rotation.y = Math.PI/2;
+            манекен1.д_китка.rotation.y = Math.PI/2;
+
+            scene.rotation.y = -Math.PI/2;
+
+			animate = function (t)
+			{
+                var t = clock.getElapsedTime();
+				// тук се описват динамичните елементи на позата
+				// като променливата t е номер на кадър, като се
+				// очаква 1 секунда да е приблизително 60 кадъра
+
+
+                //Hands
+                манекен.л_лакът.rotation.x = 1 -0.5*sin(70*t);
+                манекен1.д_ръка.rotation.z= 0.5*sin(70*t);
+                манекен1.л_ръка.rotation.z= -0.5*sin(70*t);
+
+                //Legs
+                манекен1.л_крак.rotation.z = (-0.5 -0.3*sin(70*t))/1;
+                манекен1.л_коляно.rotation.z = 0.5 - 0.25*sin(70*t);
+
+                манекен1.д_крак.rotation.z = (-0.5 +0.3*sin(70*t))/1;
+                манекен1.д_коляно.rotation.z = (0.5 + 0.25*sin(70*t));
+
+                //Kiss
+                манекен.д_ръка.rotation.z = -0.25 +0.25*sin(50*t);
+                манекен.д_лакът.rotation.z = -1.3 +1.3*sin(50*t);
+
+                //Move
+                манекен1.position.z-=0.11;
+                манекен1.position.x-=0.11;
+
+			}
+
+			drawFrame();
+		</script>
+	</body>
+</html>
